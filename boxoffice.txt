@@ -1,0 +1,68 @@
+rm(list=ls())                                                    ##清除当前工作变量
+setwd("H:\\基础案例")                                            ##指定工作目录路径
+a = read.csv("film.csv", header = T, stringsAsFactor = F)        ##读入数据，不要将字符串视为factor
+summary(a)                                                       ##查看数据基本情况，检查缺失情况
+a = na.omit(a)                                                   ##将数据集里全部NA所在行删除
+film_high = a[which(a$boxoffice==max(a$boxoffice)),]             ##查看票房最高纪录
+film_low = a[which(a$boxoffice==min(a$boxoffice)),]              ##查看票房最低纪录
+hist(a$boxoffice,xlab="票房(万元)",ylab="频数",
+     main="",col="dodgerblue")                                   ##票房直方图
+table(a$genre)                                                   ##电影类型统计
+boxplot(log(boxoffice)~genre,xlab="电影类型",
+        data=a,col="indianred1",ylab="对数票房")                 ##电影类型箱线图
+table(a$month)                                                   ##上映月份统计
+boxplot(log(boxoffice)~month,xlab="月份",
+        data=a,col="dodgerblue",ylab="对数票房")                 ##上映月份箱线图
+a$dangqi[a$month==12 | a$month==1 | a$month==2]="贺岁档"         ##当期划分：贺岁档
+a$dangqi[a$month==7 | a$month==8 | a$month==9]="暑期档"          ##当期划分：暑期档
+a$dangqi[a$month==3 | a$month==4]="普通档"                       ##当期划分：普通当
+a$dangqi[a$month==5 | a$month==6]="黄金1档"                      ##当期划分：黄金1档
+a$dangqi[a$month==10 | a$month==11]="黄金2档"                    ##当期划分：黄金2档
+table(a$dangqi)                                                  ##上映档期统计
+boxplot(log(boxoffice)~dangqi,xlab="档期",
+        data=a,col="yellow",ylab="对数票房")                     ##上映档期箱线图
+table(a$distribute)                                              ##宣发公司统计
+boxplot(log(boxoffice)~distribute,xlab="档期",
+        data=a,col="dodgerblue",ylab="对数票房")                 ##宣发公司箱线图
+
+par(mfrow=c(2,2))                                                ##输出2行2列图形
+boxplot(log(boxoffice)~reality,data=a,col=c("dodgerblue"),
+        names=c("否","是"), ylab="对数票房",xlab="是否改编")     ##是否改编
+boxplot(log(boxoffice)~story,data=a,col=c("indianred1"),
+        names=c("原创","虚构"),ylab="",xlab="是否真人真事")      ##是否原创
+boxplot(log(boxoffice)~remake,data=a,col=c("lightgreen"),
+        names=c("否","是"),ylab="",xlab="是否翻拍")              ##是否翻拍
+boxplot(log(boxoffice)~sequel,data=a,col=c("purple"),
+        names=c("否","是"),ylab="",xlab="是否有续集")            ##是否续集
+
+par(mfrow=c(1,2))                                                ##输出1行2列图形
+boxplot(log(boxoffice)~导演得奖情况,data=a,
+        col=c("indianred1"),names=c("否","是"),
+        ylab="对数票房",xlab="",main="导演获奖 vs 票房")         ##导演是否获奖
+boxplot(log(boxoffice)~导演是否转型,data=a,
+        col=c("purple"),names=c("否","是"),
+        ylab="",xlab="",main="导演转型 vs 票房")                 ##导演是否转型
+
+## 在比较导演年代时，我建议把30和40的统计归为50年代以下，这样不需要删样本
+a$导演年代[a$导演年代<50]="50以下"                               ##将30和40年代合并为50以下
+a$导演年代=factor(a$导演年代,c("50以下","50","60","70","80"))    ##更改因子水平顺序
+boxplot(log(boxoffice)~导演年代,data=a,col=c("orange"),          ##不同年代导演的区别
+        ylab="对数票房",xlab="导 演 年 代")
+table(a$导演年代)
+lm=lm(log(boxoffice)~as.factor(genre)+as.factor(year)+
+         runtime+as.factor(dangqi)+as.factor(distribute)
+         +as.factor(story)+sequel+reality
+         +导演得奖情况+导演是否转型,data=a)                      ##拟合线性模型
+summary(lm)                                                      ##给出估计结果
+
+##预测第一部电影的票房
+test = a[1,]
+bb = exp(predict(lm,test))
+
+
+
+
+
+
+
+
